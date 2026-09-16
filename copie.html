@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Copie — Carnet Cookeo</title>
+<title>Copie - Carnet Cookeo</title>
 <style>
   body{font-family:sans-serif;background:#2B2622;color:#F2EEE4;padding:30px;max-width:600px;margin:0 auto;}
   label{display:block;margin:14px 0 6px;font-size:13px;color:#C9C3B4;}
@@ -12,59 +12,18 @@
 </style>
 </head>
 <body>
-<h2>Copier les données d'un site vers un autre</h2>
-<p>Copie toutes les rubriques et tous les plats d'une clé source vers une clé destination, dans le même projet Firebase. Ne supprime rien côté source.</p>
-<label>Clé source (celle qui a déjà tes données)</label>
+<h2>Copier les donnees d'un site vers un autre</h2>
+<p>Copie toutes les rubriques et tous les plats d'une cle source vers une cle destination, dans le meme projet Firebase. Ne supprime rien cote source.</p>
+<label>Cle source (celle qui a deja tes donnees)</label>
 <input type="text" id="source" placeholder="5025q5o5ey2f1n6m">
-<label>Clé destination (celle vers laquelle copier)</label>
+<label>Cle destination (celle vers laquelle copier)</label>
 <input type="text" id="dest" placeholder="3w67z6p516q394p2">
-<button onclick="copier()">Copier</button>
+<button id="btn-copier">Copier</button>
 <pre id="log">En attente...</pre>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="config.js"></script>
-<script>
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-// pré-remplit depuis l'URL si présent : ?source=xxx&dest=yyy
-const params = new URLSearchParams(window.location.search);
-if (params.get('source')) document.getElementById('source').value = params.get('source');
-if (params.get('dest')) document.getElementById('dest').value = params.get('dest');
-
-async function copier() {
-  const log = document.getElementById('log');
-  const source = document.getElementById('source').value.trim();
-  const dest = document.getElementById('dest').value.trim();
-  if (!source || !dest) { log.textContent = "Remplis les deux clés."; return; }
-  if (source === dest) { log.textContent = "Source et destination identiques, rien à faire."; return; }
-
-  log.textContent = "Copie des rubriques...\n";
-  const srcRef = db.collection('sites').doc(source);
-  const dstRef = db.collection('sites').doc(dest);
-
-  const rubSnap = await srcRef.collection('rubriques').get();
-  const rubMap = {};
-  for (const doc of rubSnap.docs) {
-    const newDoc = await dstRef.collection('rubriques').add(doc.data());
-    rubMap[doc.id] = newDoc.id;
-    log.textContent += `Rubrique copiée : ${doc.data().nom}\n`;
-  }
-
-  log.textContent += "\nCopie des plats...\n";
-  const platSnap = await srcRef.collection('plats').get();
-  let count = 0;
-  for (const doc of platSnap.docs) {
-    const data = doc.data();
-    const newRubriqueId = rubMap[data.rubriqueId] || data.rubriqueId || '';
-    await dstRef.collection('plats').add({ ...data, rubriqueId: newRubriqueId });
-    count++;
-    log.textContent += `Plat copié : ${data.nom}\n`;
-  }
-
-  log.textContent += `\nTerminé. ${rubSnap.docs.length} rubrique(s) et ${count} plat(s) copiés vers la clé ${dest}.`;
-}
-</script>
+<script src="copie.js"></script>
 </body>
 </html>
