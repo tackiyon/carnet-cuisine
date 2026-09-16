@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carnet Cookeo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #2B2622;
+    --bg-raised: #35302A;
+    --cream: #F2EEE4;
+    --cream-dim: #C9C3B4;
+    --mustard: #E8A33D;
+    --mustard-dark: #7A5A22;
+    --sage: #8A9A73;
+    --sage-dark: #3E4630;
+    --border: #4A423A;
+    --danger: #C96A5A;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--cream);
+    font-family:'Work Sans', sans-serif;
+    min-height:100vh;
+  }
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:26px;
+    margin:0 0 2px;
+    letter-spacing:-0.01em;
+  }
+  .sub{
+    color:var(--cream-dim);
+    font-size:14px;
+    margin:0;
+  }
+  .top-header{
+    max-width:1040px;
+    margin:0 auto;
+    padding:20px 20px 0;
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+  }
+  #btn-toggle-sidebar{
+    flex-shrink:0;
+    background:var(--bg-raised);
+    border:1px solid var(--border);
+    color:var(--cream);
+    border-radius:8px;
+    padding:8px 12px;
+    font-size:16px;
+    cursor:pointer;
+    margin-top:2px;
+  }
+  #btn-toggle-sidebar:hover{ border-color:var(--mustard); }
+  .key-banner{
+    background:rgba(232,163,61,.12);
+    border:1px solid var(--mustard-dark);
+    border-radius:10px;
+    padding:14px 16px;
+    font-size:13px;
+    margin:16px auto 0;
+    line-height:1.5;
+    max-width:1000px;
+  }
+  .key-banner code{
+    background:var(--bg);
+    padding:2px 6px;
+    border-radius:4px;
+    font-size:12px;
+    word-break:break-all;
+  }
+  #status-msg{
+    text-align:center;
+    color:var(--cream-dim);
+    padding:40px;
+  }
+
+  /* ---------- ONGLETS ---------- */
+  .tab-bar{
+    max-width:1040px;
+    margin:18px auto 0;
+    padding:0 20px;
+    display:flex;
+    gap:8px;
+  }
+  .tab-btn{
+    flex:1;
+    max-width:220px;
+    background:var(--bg-raised);
+    border:1px solid var(--border);
+    color:var(--cream-dim);
+    border-radius:10px;
+    padding:10px;
+    font-family:inherit;
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .tab-btn.active{
+    border-color:var(--mustard);
+    color:var(--mustard);
+    background:rgba(232,163,61,.1);
+  }
+  .hidden{display:none !important;}
+
+  /* ---------- LAYOUT CARNET (sidebar + contenu) ---------- */
+  #tab-carnet{
+    max-width:1040px;
+    margin:0 auto;
+    padding:20px;
+    display:flex;
+    gap:24px;
+    align-items:flex-start;
+    position:relative;
+  }
+
+  #sidebar{
+    width:220px;
+    flex-shrink:0;
+    overflow:hidden;
+    transition:width .18s ease, opacity .18s ease, margin .18s ease;
+  }
+  #sidebar.collapsed{
+    width:0;
+    opacity:0;
+    margin-right:-24px;
+    pointer-events:none;
+  }
+  #sidebar-overlay{ display:none; }
+
+  .sidebar-title{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--cream-dim);
+    margin:18px 0 8px;
+    white-space:nowrap;
+  }
+  .sidebar-title:first-child{ margin-top:0; }
+  .sidebar-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    padding:8px 10px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:14px;
+    white-space:nowrap;
+  }
+  .sidebar-item:hover{ background:var(--bg-raised); }
+  .sidebar-item.active{
+    background:rgba(232,163,61,.14);
+    color:var(--mustard);
+    font-weight:600;
+  }
+  .sidebar-count{
+    background:rgba(255,255,255,.08);
+    border-radius:10px;
+    padding:1px 7px;
+    font-size:11px;
+    color:var(--cream-dim);
+  }
+  .sidebar-item.active .sidebar-count{ color:var(--mustard); }
+  .sidebar-del{
+    background:none;
+    border:none;
+    color:var(--cream-dim);
+    font-size:15px;
+    line-height:1;
+    padding:2px 4px;
+  }
+  .sidebar-del:hover{ color:var(--danger); }
+  .add-rub{
+    margin-top:6px;
+    width:100%;
+    padding:7px 10px;
+    border-radius:8px;
+    border:1px dashed var(--border);
+    background:none;
+    color:var(--cream-dim);
+    font-size:13px;
+    cursor:pointer;
+    text-align:left;
+    white-space:nowrap;
+  }
+  .add-rub:hover{ border-color:var(--mustard); color:var(--mustard); }
+
+  main#content{ flex:1; min-width:0; }
+
+  .toolbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:16px;
+    gap:10px;
+  }
+  .rub-title{
+    font-family:'Fraunces', serif;
+    font-size:20px;
+    font-style:italic;
+    color:var(--cream-dim);
+  }
+  .btn-primary{
+    background:var(--mustard);
+    color:#231A0A;
+    border:none;
+    padding:10px 18px;
+    border-radius:8px;
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .btn-primary:hover{opacity:.9;}
+
+  /* ---------- RECHERCHE ---------- */
+  .search-bar{
+    display:flex;
+    gap:8px;
+    margin-bottom:16px;
+    flex-wrap:wrap;
+  }
+  .search-bar input{
+    background:var(--bg-raised);
+    border:1px solid var(--border);
+    border-radius:8px;
+    color:var(--cream);
+    padding:10px 12px;
+    font-family:inherit;
+    font-size:14px;
+  }
+  #search-input{ flex:2; min-width:160px; }
+  #search-maxprice{ flex:1; min-width:110px; }
+
+  /* ---------- PLATS ---------- */
+  .plats{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .plat-card{
+    background:var(--bg-raised);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:14px 16px;
+    cursor:pointer;
+  }
+  .plat-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+  }
+  .plat-nom{
+    font-family:'Fraunces', serif;
+    font-size:18px;
+  }
+  .plat-meta{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    flex-shrink:0;
+  }
+  .card-stars{ margin-top:6px; }
+  .plat-tags{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-top:8px;
+  }
+  .tag{
+    background:rgba(255,255,255,.06);
+    color:var(--cream-dim);
+    border-radius:20px;
+    padding:3px 10px;
+    font-size:11px;
+  }
+  .tag-appareil{ background:rgba(138,154,115,.18); color:var(--sage); }
+  .tag-muted{ opacity:.85; }
+  .badge{
+    font-size:11px;
+    padding:3px 9px;
+    border-radius:20px;
+    font-weight:600;
+    white-space:nowrap;
+  }
+  .badge.envie{background:rgba(138,154,115,.2);color:var(--sage);}
+  .badge.fait{background:rgba(232,163,61,.2);color:var(--mustard);}
+  .prix{font-size:13px;color:var(--cream-dim);}
+  .empty{
+    text-align:center;
+    padding:60px 20px;
+    color:var(--cream-dim);
+  }
+  .empty p{margin:0 0 16px;}
+  .empty-inline{ color:var(--cream-dim); font-size:14px; padding:16px 0; text-align:center; }
+
+  /* ---------- ÉTOILES ---------- */
+  .stars{ display:inline-flex; gap:2px; }
+  .star{
+    position:relative;
+    display:inline-block;
+    width:22px;
+    height:22px;
+    font-size:20px;
+    line-height:22px;
+  }
+  .star-empty{
+    position:absolute; top:0; left:0;
+    color:var(--border);
+  }
+  .star-fill{
+    position:absolute; top:0; left:0;
+    overflow:hidden;
+    white-space:nowrap;
+    color:var(--mustard);
+  }
+  .stars-interactive .star{ width:26px; height:26px; font-size:24px; line-height:26px; }
+  .star-half{
+    position:absolute; top:0; height:100%;
+    width:50%;
+    background:none; border:none; padding:0; margin:0; cursor:pointer;
+  }
+  .star-left{ left:0; }
+  .star-right{ right:0; }
+  #plat-note-value{ font-size:13px; color:var(--cream-dim); margin-left:8px; vertical-align:middle; }
+  #plat-note-section{ margin:14px 0; }
+  #plat-note-section .note-row{ display:flex; align-items:center; gap:4px; }
+  .note-value{ font-size:13px; color:var(--cream-dim); }
+
+  /* ---------- OVERLAY / MODALS ---------- */
+  .overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.6);
+    display:none;
+    align-items:flex-start;
+    justify-content:center;
+    padding:20px;
+    overflow-y:auto;
+    z-index:20;
+  }
+  .overlay.show{display:flex;}
+  .modal{
+    background:var(--bg-raised);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:24px;
+    max-width:480px;
+    width:100%;
+    margin-top:40px;
+  }
+  .modal h2{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    margin:0 0 18px;
+    font-size:22px;
+  }
+  label{
+    display:block;
+    font-size:13px;
+    color:var(--cream-dim);
+    margin:14px 0 6px;
+  }
+  label:first-of-type{margin-top:0;}
+  input[type=text], input[type=number], textarea, select{
+    width:100%;
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:10px 12px;
+    color:var(--cream);
+    font-family:inherit;
+    font-size:14px;
+  }
+  textarea{resize:vertical;min-height:70px;}
+  .row-2{ display:flex; gap:10px; }
+  .row-2 > div{ flex:1; }
+  .status-toggle{
+    display:flex;
+    gap:8px;
+  }
+  .status-toggle button{
+    flex:1;
+    padding:10px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    background:var(--bg);
+    color:var(--cream-dim);
+    cursor:pointer;
+    font-size:13px;
+    font-weight:500;
+  }
+  .status-toggle button.sel-envie.on{border-color:var(--sage);color:var(--sage);background:rgba(138,154,115,.12);}
+  .status-toggle button.sel-fait.on{border-color:var(--mustard);color:var(--mustard);background:rgba(232,163,61,.12);}
+
+  #plat-appareils{ display:flex; gap:10px; flex-wrap:wrap; }
+  #plat-appareils label{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin:0;
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:7px 10px;
+    font-size:13px;
+    cursor:pointer;
+    color:var(--cream);
+  }
+
+  .ingredient-row{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin-bottom:8px;
+    flex-wrap:wrap;
+  }
+  .ingredient-row .ingredient-nom{ flex:2; min-width:110px; }
+  .ingredient-row .ingredient-qte{ flex:0 0 62px; width:62px; padding:10px 6px; text-align:center; }
+  .ingredient-row .ingredient-unite{ flex:0 0 78px; width:78px; padding:10px 4px; font-size:12px; }
+  .ingredient-check{
+    display:flex;
+    align-items:center;
+    gap:4px;
+    margin:0;
+    font-size:11px;
+    color:var(--cream-dim);
+    white-space:nowrap;
+  }
+  .btn-remove-ingredient{
+    background:none;
+    border:none;
+    color:var(--danger);
+    font-size:18px;
+    line-height:1;
+    cursor:pointer;
+  }
+  #btn-add-ingredient{
+    width:100%;
+    background:none;
+    border:1px dashed var(--border);
+    color:var(--cream-dim);
+    border-radius:8px;
+    padding:8px;
+    font-size:13px;
+    cursor:pointer;
+    margin-top:2px;
+  }
+  #btn-add-ingredient:hover{ border-color:var(--mustard); color:var(--mustard); }
+
+  .modal-actions{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:22px;
+    gap:10px;
+  }
+  .link-btn{
+    background:none;
+    border:none;
+    color:var(--danger);
+    font-size:13px;
+    cursor:pointer;
+    padding:8px 0;
+  }
+  .btn-secondary{
+    background:none;
+    border:1px solid var(--border);
+    color:var(--cream-dim);
+    padding:10px 16px;
+    border-radius:8px;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .detail-section{margin-bottom:16px;}
+  .detail-section h4{
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    color:var(--cream-dim);
+    margin:0 0 6px;
+    font-weight:500;
+  }
+  .detail-section p, .detail-section ul{
+    margin:0;
+    font-size:14px;
+    line-height:1.5;
+    white-space:pre-wrap;
+  }
+  .detail-section ul{ list-style:none; padding:0; white-space:normal; }
+  .detail-section li{ padding:2px 0; }
+  .detail-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px 20px;
+  }
+
+  /* ---------- MODE COURSES ---------- */
+  #tab-courses{
+    max-width:640px;
+    margin:0 auto;
+    padding:20px;
+  }
+  .courses-search{
+    width:100%;
+    background:var(--bg-raised);
+    border:1px solid var(--border);
+    border-radius:8px;
+    color:var(--cream);
+    padding:10px 12px;
+    font-family:inherit;
+    font-size:14px;
+    margin-bottom:12px;
+  }
+  .courses-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:var(--bg-raised);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:10px 12px;
+    margin-bottom:8px;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .courses-row span:first-of-type{ flex:1; }
+  .courses-ing-row{ align-items:flex-start; }
+  .courses-ing-main{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+  .courses-qty{ font-size:12px; color:var(--mustard); }
+  .courses-source{ font-size:11px; color:var(--cream-dim); text-align:right; max-width:140px; flex-shrink:0; }
+  .checked-out{ text-decoration:line-through; color:var(--cream-dim); }
+  #btn-courses-generate{
+    width:100%;
+    margin-top:8px;
+    background:var(--mustard);
+    color:#231A0A;
+    border:none;
+    border-radius:8px;
+    padding:12px;
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+  }
+  #btn-courses-generate:disabled{ opacity:.4; cursor:not-allowed; }
+  #btn-courses-restart{
+    width:100%;
+    margin-top:16px;
+    background:none;
+    border:1px solid var(--border);
+    color:var(--cream);
+    border-radius:8px;
+    padding:10px;
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+  }
+
+  /* ---------- MOBILE ---------- */
+  @media (max-width: 760px){
+    #tab-carnet{ flex-direction:row; }
+    #sidebar{
+      position:fixed;
+      top:0; left:0;
+      width:240px;
+      height:100%;
+      background:var(--bg-raised);
+      border-right:1px solid var(--border);
+      padding:20px 16px;
+      overflow-y:auto;
+      transform:translateX(0);
+      transition:transform .2s ease;
+      z-index:30;
+      opacity:1;
+      margin-right:0;
+    }
+    #sidebar.collapsed{
+      transform:translateX(-100%);
+      width:240px;
+      opacity:1;
+      margin-right:0;
+      pointer-events:auto;
+    }
+    #sidebar:not(.collapsed) ~ #sidebar-overlay{
+      display:block;
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.5);
+      z-index:25;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="top-header">
+  <button id="btn-toggle-sidebar" title="Afficher/masquer le menu">☰</button>
+  <div>
+    <h1>Carnet Cookeo</h1>
+    <p class="sub">Tes recettes air fryer, ce que t'as testé, ce que t'as envie d'essayer.</p>
+  </div>
+</div>
+
+<div id="key-banner" style="display:none" class="key-banner"></div>
+
+<div id="status-msg">Chargement…</div>
+
+<div id="app" style="display:none">
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="carnet">Mon carnet</button>
+    <button class="tab-btn" data-tab="courses">Mode courses</button>
+  </div>
+
+  <!-- ============ ONGLET CARNET ============ -->
+  <div id="tab-carnet">
+    <div id="sidebar">
+      <div id="sidebar-all"></div>
+      <div class="sidebar-title">Rubriques</div>
+      <div id="sidebar-rubriques"></div>
+      <button class="add-rub" onclick="openOverlay('overlay-rub')">+ rubrique</button>
+      <div class="sidebar-title">Appareils</div>
+      <div id="sidebar-appareils"></div>
+    </div>
+    <div id="sidebar-overlay"></div>
+
+    <main id="content">
+      <div class="toolbar">
+        <div class="rub-title" id="rub-title">Tous les plats</div>
+        <button class="btn-primary" id="btn-add-plat">+ nouveau plat</button>
+      </div>
+      <div class="search-bar">
+        <input type="text" id="search-input" placeholder="Chercher un plat...">
+        <input type="number" id="search-maxprice" placeholder="Prix max €" min="0" step="0.5">
+      </div>
+      <div class="plats" id="plats"></div>
+      <div class="empty" id="empty" style="display:none">
+        <p>Rien ici pour le moment.</p>
+      </div>
+    </main>
+  </div>
+
+  <!-- ============ ONGLET MODE COURSES ============ -->
+  <div id="tab-courses" class="hidden">
+    <div id="courses-selection">
+      <h2 style="font-family:'Fraunces',serif; font-size:20px;">Choisis tes plats</h2>
+      <input type="text" id="courses-search" class="courses-search" placeholder="Filtrer les plats...">
+      <div id="courses-plats-list"></div>
+      <button id="btn-courses-generate" disabled>Générer ma liste de courses</button>
+    </div>
+    <div id="courses-result" class="hidden">
+      <h2 style="font-family:'Fraunces',serif; font-size:20px;">Ta liste de courses</h2>
+      <div id="courses-ingredients-list"></div>
+      <button id="btn-courses-restart">↺ Recommencer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modale ajout rubrique -->
+<div class="overlay" id="overlay-rub">
+  <div class="modal">
+    <h2>Nouvelle rubrique</h2>
+    <label>Nom</label>
+    <input type="text" id="input-rub-nom" placeholder="ex: Poulet, Desserts, Vite fait...">
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeOverlay('overlay-rub')">Annuler</button>
+      <button class="btn-primary" onclick="saveRubrique()">Créer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modale ajout/edition plat -->
+<div class="overlay" id="overlay-plat">
+  <div class="modal">
+    <h2 id="plat-modal-title">Nouveau plat</h2>
+    <input type="hidden" id="plat-id">
+    <label>Nom du plat</label>
+    <input type="text" id="input-plat-nom" placeholder="ex: Poulet pané croustillant">
+
+    <label>Rubrique</label>
+    <select id="input-plat-rubrique"></select>
+
+    <label>Appareil(s) utilisé(s)</label>
+    <div id="plat-appareils">
+      <label><input type="checkbox" value="cookeo"> Cookeo</label>
+      <label><input type="checkbox" value="airfryer"> Air fryer</label>
+      <label><input type="checkbox" value="four"> Four</label>
+    </div>
+
+    <label>Statut</label>
+    <div class="status-toggle">
+      <button type="button" class="sel-envie" onclick="setStatut('envie')">Envie de faire</button>
+      <button type="button" class="sel-fait" onclick="setStatut('fait')">Déjà testé</button>
+    </div>
+
+    <div id="plat-note-section" class="hidden">
+      <label>Note</label>
+      <div class="note-row">
+        <div id="plat-stars-input"></div>
+        <span id="plat-note-value">Pas encore noté</span>
+      </div>
+      <label>Commentaires</label>
+      <textarea id="input-plat-commentaires" placeholder="Ton avis une fois testé : trop salé, à refaire, parfait pour un soir de semaine..."></textarea>
+    </div>
+
+    <div class="row-2">
+      <div>
+        <label>Nombre de personnes</label>
+        <input type="number" id="input-plat-personnes" min="1" placeholder="ex: 4">
+      </div>
+      <div>
+        <label>Prix estimé (€)</label>
+        <input type="number" step="0.5" id="input-plat-prix" placeholder="8.50">
+      </div>
+    </div>
+
+    <label>Ingrédients</label>
+    <div id="ingredients-rows"></div>
+    <button type="button" id="btn-add-ingredient">+ ajouter un ingrédient</button>
+
+    <label>Recette</label>
+    <textarea id="input-plat-recette" placeholder="Les étapes de préparation..."></textarea>
+
+    <label>Remarques</label>
+    <textarea id="input-plat-astuces" placeholder="Bien sécher le poulet avant de paner, 180°C 12min"></textarea>
+
+    <div class="modal-actions">
+      <button class="link-btn" id="btn-delete-plat" style="display:none" onclick="deletePlat()">Supprimer</button>
+      <div style="flex:1"></div>
+      <button class="btn-secondary" onclick="closeOverlay('overlay-plat')">Annuler</button>
+      <button class="btn-primary" onclick="savePlat()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modale detail plat -->
+<div class="overlay" id="overlay-detail">
+  <div class="modal">
+    <h2 id="detail-nom">—</h2>
+    <div class="detail-grid">
+      <div class="detail-section">
+        <h4>Statut</h4>
+        <p id="detail-statut">—</p>
+      </div>
+      <div class="detail-section">
+        <h4>Rubrique</h4>
+        <p id="detail-rubrique">—</p>
+      </div>
+      <div class="detail-section">
+        <h4>Appareil(s)</h4>
+        <p id="detail-appareils">—</p>
+      </div>
+      <div class="detail-section">
+        <h4>Personnes</h4>
+        <p id="detail-personnes">—</p>
+      </div>
+    </div>
+    <div class="detail-section" id="detail-note-section">
+      <h4>Note</h4>
+      <p id="detail-note">—</p>
+      <h4 style="margin-top:12px;">Commentaires</h4>
+      <p id="detail-commentaires">—</p>
+    </div>
+    <div class="detail-section">
+      <h4>Ingrédients</h4>
+      <ul id="detail-ingredients"><li>—</li></ul>
+    </div>
+    <div class="detail-section">
+      <h4>Recette</h4>
+      <p id="detail-recette">—</p>
+    </div>
+    <div class="detail-section">
+      <h4>Remarques</h4>
+      <p id="detail-astuces">—</p>
+    </div>
+    <div class="detail-section">
+      <h4>Prix estimé</h4>
+      <p id="detail-prix">—</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeOverlay('overlay-detail')">Fermer</button>
+      <button class="btn-primary" onclick="editFromDetail()">Modifier</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
